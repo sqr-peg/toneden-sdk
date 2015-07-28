@@ -122,8 +122,8 @@ module.exports = function(grunt) {
         'compress',
         'rename:compressedLoader',
         'rename:compressedSDK',
-        'aws_s3:dev',
-        'cloudfront_clear:dev',
+        //'aws_s3:dev',
+        //'cloudfront_clear:dev',
         'rename:postLoader',
         'rename:postSDK'
     ]);
