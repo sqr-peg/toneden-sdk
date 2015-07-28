@@ -59,8 +59,9 @@ define(['jquery', 'vendor/simple-slider', 'underscore', 'vendor/td-interface', '
             var tdInstanceParameters = {
                 cache: true,
                 cachePrefix: new Date().getTime(),
-                consumerKey: '6f85bdf51b0a19b7ab2df7b969233901',
+                consumerKey: '0e545f4886c0c8006a4f95e2036399c0',
                 debug: playerParameters.debug,
+                onPlaylistPreloaded: onPlaylistPreloaded,
                 preload: true,
                 togglePause: playerParameters.togglePause,
                 tracksPerArtist: playerParameters.tracksPerArtist,
@@ -100,9 +101,42 @@ define(['jquery', 'vendor/simple-slider', 'underscore', 'vendor/td-interface', '
                 }
             }
 
+            // 'this' will refer to tdInstance here.
+            function onPlaylistPreloaded(e) {
+                this.getTracks(function(tracks) {
+                    var nowPlaying = this.getTrack();
+
+                    log(tracks);
+
+                    // If parameters.single is not explicitly set to false and
+                    // there is only one track, render the single-track player.
+                    if(tracks.length === 1 && playerParameters.single !== false && playerParameters.mini == false && playerParameters.feed == false) {
+                       playerParameters.single = true;
+                    }
+
+                    container.find('.tdspinner').hide();
+
+                    rerender({
+                        feed: playerParameters.feed,
+                        mini: playerParameters.mini,
+                        nowPlaying: nowPlaying,
+                        shrink: playerParameters.shrink,
+                        single: playerParameters.single,
+                        skin: playerParameters.skin,
+                        tracks: tracks,
+                        tracksPerArtist: playerParameters.tracksPerArtist,
+                        visualizerType: playerParameters.visualizerType
+                    });
+
+                    if(this.getSound() && !this.getSound().paused) {
+                        changePlayButton(false);
+                    }
+                }.bind(this));
+            }
+
             function rerender(parameters) {
                 parameters = JSON.parse(JSON.stringify(parameters));
-                parameters.repeat = tdInstance.config.loopTrack;
+                parameters.repeat = tdInstance && tdInstance.config.loopTrack;
 
                 // Render the empty template if no urls were originally supplied
                 // or if all of the tracks are falsy.
@@ -514,38 +548,6 @@ define(['jquery', 'vendor/simple-slider', 'underscore', 'vendor/td-interface', '
                         container.find('.stop-time').empty().append(loader);
                     }
                 }
-            });
-
-            tdInstance.on('tdplayer.playlist.preloaded', function(e) {
-                tdInstance.tracks(function(tracks) {
-                    var nowPlaying = tdInstance.track();
-
-                    log(tracks);
-
-                    // If parameters.single is not explicitly set to false and
-                    // there is only one track, render the single-track player.
-                    if(tracks.length === 1 && playerParameters.single !== false && playerParameters.mini == false && playerParameters.feed == false) {
-                       playerParameters.single = true;
-                    }
-
-                    container.find('.tdspinner').hide();
-
-                    rerender({
-                        feed: playerParameters.feed,
-                        mini: playerParameters.mini,
-                        nowPlaying: nowPlaying,
-                        shrink: playerParameters.shrink,
-                        single: playerParameters.single,
-                        skin: playerParameters.skin,
-                        tracks: tracks,
-                        tracksPerArtist: playerParameters.tracksPerArtist,
-                        visualizerType: playerParameters.visualizerType
-                    });
-
-                    if(tdInstance.sound() && !tdInstance.sound().paused) {
-                        changePlayButton(false);
-                    }
-                });
             });
 
             tdInstance.on('tdplayer.track.ready', function(e) {
